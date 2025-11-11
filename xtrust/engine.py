@@ -111,14 +111,13 @@ class XTRustEngine:
                 obs_val = obs[q_idx]
                 det_missing = self._max_unvisited(doc_id, q_idx, query_tokens, visited, delta, total_events, probabilistic=False)
                 prob_missing = self._max_unvisited(doc_id, q_idx, query_tokens, visited, delta, total_events, probabilistic=True)
-                error = 0.0
                 if envelope is None:
                     lower_terms[q_idx] = 0.0
                 else:
                     error = sum(abs(q) * err for q, err in zip(query, envelope.residual_error))
                     lower_terms[q_idx] = max(obs_val - error, 0.0)
-                upper_terms[q_idx] = max(obs_val + error, det_missing)
-                prob_terms[q_idx] = max(obs_val + error, prob_missing)
+                upper_terms[q_idx] = max(obs_val, det_missing)
+                prob_terms[q_idx] = max(obs_val, prob_missing)
             lower = mean(lower_terms)
             upper = mean(upper_terms)
             prob_upper = mean(prob_terms)
