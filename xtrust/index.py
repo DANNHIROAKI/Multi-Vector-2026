@@ -28,6 +28,7 @@ class DocumentEntry:
     cluster_set: set[int]
     length: int
     tokens: List[List[float]]
+    token_map: Dict[int, int]
     active: bool = True
 
     def clone(self) -> "DocumentEntry":
@@ -43,6 +44,7 @@ class DocumentEntry:
             cluster_set=set(self.cluster_set),
             length=self.length,
             tokens=[row[:] for row in self.tokens],
+            token_map=dict(self.token_map),
             active=self.active,
         )
 
@@ -52,6 +54,12 @@ class DocumentEntry:
         candidates = self.cluster_signature.superset()
         candidates.update(self.cluster_set)
         return candidates
+
+    def token_vector(self, token_index: int) -> List[float]:
+        """Return the original token vector referenced by ``token_index``."""
+
+        position = self.token_map[token_index]
+        return self.tokens[position]
 
 
 @dataclass
@@ -166,12 +174,14 @@ class IndexBuilder:
             cluster_set: set[int] = set(assignments[i] for i in indices)
             signature = BloomSignature.create(size=max(len(cluster_set), 1))
             signature.update(cluster_set)
+            token_map = {token_index: position for position, token_index in enumerate(indices)}
             doc_entries[doc_id] = DocumentEntry(
                 doc_id=doc_id,
                 cluster_signature=signature,
                 cluster_set=cluster_set,
                 length=len(indices),
                 tokens=[row[:] for row in self._documents[doc_id]],
+                token_map=token_map,
             )
 
         return XTRustIndex(
