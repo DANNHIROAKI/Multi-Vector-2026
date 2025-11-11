@@ -30,3 +30,24 @@ def test_audit_detects_signature_issue():
     report = audit_index(index, sample_queries=4)
     assert not report.succeeded
 
+
+def test_audit_detects_upper_bound_violation():
+    index = _build_index().build()
+    for envelope in index.envelopes.values():
+        if envelope.linf_radius and any(radius > 0 for radius in envelope.linf_radius):
+            envelope.linf_radius = [radius * 0.1 for radius in envelope.linf_radius]
+            envelope.l2_radius *= 0.1
+            break
+    report = audit_index(index, sample_queries=16)
+    assert not report.succeeded
+
+
+def test_audit_detects_residual_error_violation():
+    index = _build_index().build()
+    for envelope in index.envelopes.values():
+        if any(err > 0 for err in envelope.residual_error):
+            envelope.residual_error = [max(err * 0.1, 1e-6) for err in envelope.residual_error]
+            break
+    report = audit_index(index, sample_queries=4)
+    assert not report.succeeded
+
