@@ -1,0 +1,15 @@
+[project]
+name = "xtrust"
+version = "0.1.0"
+description = "Research prototype implementing the XTRust late interaction retrieval engine"
+authors = [{name = "Research Automation"}]
+requires-python = ">=3.10"
+dependencies = []
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
