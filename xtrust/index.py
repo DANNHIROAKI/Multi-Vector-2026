@@ -46,6 +46,13 @@ class DocumentEntry:
             active=self.active,
         )
 
+    def candidate_clusters(self) -> set[int]:
+        """Return a conservative set of clusters that may contain this document."""
+
+        candidates = self.cluster_signature.superset()
+        candidates.update(self.cluster_set)
+        return candidates
+
 
 @dataclass
 class XTRustIndex:

@@ -207,7 +207,7 @@ class XTRustEngine:
             return 0.0
         best = 0.0
         query = query_tokens[query_idx]
-        for cluster_id in doc_entry.cluster_set:
+        for cluster_id in doc_entry.candidate_clusters():
             if cluster_id in visited[query_idx]:
                 continue
             envelope = self.index.envelopes[cluster_id]
@@ -248,18 +248,23 @@ class XTRustEngine:
     ) -> float:
         totals: List[float] = []
         for q_idx, heap in enumerate(heaps):
+            if not probabilistic or delta <= 0:
+                while heap and heap[0][1] in visited[q_idx]:
+                    heapq.heappop(heap)
+                if not heap:
+                    totals.append(0.0)
+                else:
+                    totals.append(max(0.0, -heap[0][0]))
+                continue
             best = 0.0
+            query = query_tokens[q_idx]
             for neg_score, cluster_id in heap:
                 if cluster_id in visited[q_idx]:
                     continue
                 envelope = self.index.envelopes[cluster_id]
-                if probabilistic and delta > 0:
-                    bound = envelope.probabilistic_upper_bound(query_tokens[q_idx], delta, total_events)
-                else:
-                    bound = -neg_score
+                bound = envelope.probabilistic_upper_bound(query, delta, total_events)
                 if bound > best:
                     best = bound
-                    break
             totals.append(best)
         return mean(totals)
 
